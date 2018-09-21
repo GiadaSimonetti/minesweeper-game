@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 // import './Board.css';
 import Cell from './Cell';
 
+// Board Class
 export default class Board extends React.Component {
   state = {
         boardData: this.initBoardData(this.props.height, this.props.width, this.props.mines),
@@ -206,4 +207,100 @@ export default class Board extends React.Component {
 
     }
 
+    // Handle User Events
+
+    _handleCellClick(x, y) {
+
+        // check if revealed. return if true.
+        if (this.state.boardData[x][y].isRevealed || this.state.boardData[x][y].isFlagged) return null;
+
+        // check if mine. game over if true
+        if (this.state.boardData[x][y].isMine) {
+            this.setState({gameStatus: "You Lost."});
+            this.revealBoard();
+            alert("game over");
+        }
+
+        let updatedData = this.state.boardData;
+        updatedData[x][y].isFlagged = false;
+        updatedData[x][y].isRevealed = true;
+
+        if (updatedData[x][y].isEmpty) {
+            updatedData = this.revealEmpty(x, y, updatedData);
+        }
+
+        if (this.getHidden(updatedData).length === this.props.mines) {
+            this.setState({mineCount: 0, gameStatus: "You Win."});
+            this.revealBoard();
+            alert("You Win");
+        }
+
+        this.setState({
+            boardData: updatedData,
+            mineCount: this.props.mines - this.getFlags(updatedData).length,
+        });
+    }
+
+    _handleContextMenu(e, x, y) {
+        e.preventDefault();
+        let updatedData = this.state.boardData;
+        let mines = this.state.mineCount;
+
+        // check if already revealed
+        if (updatedData[x][y].isRevealed) return;
+
+        if (updatedData[x][y].isFlagged) {
+            updatedData[x][y].isFlagged = false;
+            mines++;
+        } else {
+            updatedData[x][y].isFlagged = true;
+            mines--;
+        }
+
+        if (mines === 0) {
+            const mineArray = this.getMines(updatedData);
+            const FlagArray = this.getFlags(updatedData);
+            if (JSON.stringify(mineArray) === JSON.stringify(FlagArray)) {
+                this.setState({mineCount: 0, gameStatus: "You Win."});
+                this.revealBoard();
+                alert("You Win");
+            }
+        }
+
+        this.setState({
+            boardData: updatedData,
+            mineCount: mines,
+        });
+    }
+
+    renderBoard(data) {
+        return data.map((datarow) => {
+            return datarow.map((dataitem) => {
+                return (
+                    <div key={dataitem.x * datarow.length + dataitem.y}>
+                        <Cell
+                            onClick={() => this._handleCellClick(dataitem.x, dataitem.y)}
+                            cMenu={(e) => this._handleContextMenu(e, dataitem.x, dataitem.y)}
+                            value={dataitem}
+                        />
+                        {(datarow[datarow.length - 1] === dataitem) ? <div className="clear" /> : ""}
+                    </div>);
+            })
+        });
+
+    }
+
+  render() {
+        return (
+            <div className="board">
+                <div className="game-info">
+                    <span className="info">Mines remaining: {this.state.mineCount}</span>
+                    <h1 className="info">{this.state.gameStatus}</h1>
+                </div>
+                {
+                    this.renderBoard(this.state.boardData)
+                }
+            </div>
+        );
+    }
 }
