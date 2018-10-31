@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-// import './Cell.css';
+import './Cell.css';
 
 export default class Cell extends Component {
     getValue() {

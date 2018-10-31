@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-// import './Board.css';
+import './Board.css';
 import Cell from './Cell';
 
 // Board Class
